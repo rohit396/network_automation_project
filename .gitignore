@@ -1,0 +1,5 @@
+__pycache__/
+*.log
+*.retry
+.vscode/
+.DS_Store
