@@ -1,0 +1,27 @@
+- name: Remove subinterfaces for VLANs via SSH
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    router_ip: 172.20.10.6
+
+  tasks:
+    - name: Delete subinterfaces and reset Fa0/1
+      expect:
+        command: ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -oHostKeyAlgorithms=+ssh-rsa -oCiphers=+aes128-cbc cisco@{{ router_ip }}
+        responses:
+          'Password:': "cisco\n"
+          '>': "enable\n"
+          'Password:': "cisco\n"
+          '#': |
+            configure terminal
+            no interface FastEthernet0/1.10
+            no interface FastEthernet0/1.20
+            interface FastEthernet0/1
+            no shutdown
+            ip address 192.168.100.1 255.255.255.0
+            end
+            write memory
+            exit
+        timeout: 30
+        echo: yes
