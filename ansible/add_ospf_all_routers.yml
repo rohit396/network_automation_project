@@ -1,0 +1,28 @@
+- name: Add OSPF configuration to all routers via SSH
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    routers:
+      - { name: "R1", ip: "172.20.10.6", network: "172.20.10.0", wildcard: "0.0.0.255", area: "0" }
+      - { name: "R2", ip: "172.20.10.7", network: "172.20.10.0", wildcard: "0.0.0.255", area: "0" }
+      - { name: "R3", ip: "172.20.10.8", network: "172.20.10.0", wildcard: "0.0.0.255", area: "0" }
+
+  tasks:
+    - name: Add OSPF on {{ item.name }}
+      expect:
+        command: ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -oHostKeyAlgorithms=+ssh-rsa -oCiphers=+aes128-cbc cisco@{{ item.ip }}
+        responses:
+          'Password:': "cisco\n"
+          '>': "enable\n"
+          'Password:': "cisco\n"
+          '#': |
+            configure terminal
+            router ospf 1
+            network {{ item.network }} {{ item.wildcard }} area {{ item.area }}
+            end
+            write memory
+            exit
+        timeout: 30
+        echo: yes
+      loop: "{{ routers }}"

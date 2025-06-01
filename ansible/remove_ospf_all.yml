@@ -1,0 +1,27 @@
+- name: Remove OSPF configuration from all routers via SSH
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    routers:
+      - { name: "R1", ip: "172.20.10.6" }
+      - { name: "R2", ip: "172.20.10.7" }
+      - { name: "R3", ip: "172.20.10.8" }
+
+  tasks:
+    - name: Remove OSPF on {{ item.name }}
+      expect:
+        command: ssh -oKexAlgorithms=+diffie-hellman-group1-sha1 -oHostKeyAlgorithms=+ssh-rsa -oCiphers=+aes128-cbc cisco@{{ item.ip }}
+        responses:
+          'Password:': "cisco\n"
+          '>': "enable\n"
+          'Password:': "cisco\n"
+          '#': |
+            configure terminal
+            no router ospf 1
+            end
+            write memory
+            exit
+        timeout: 30
+        echo: yes
+      loop: "{{ routers }}"
